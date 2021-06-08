@@ -13,15 +13,14 @@ namespace ariel
     template <typename T>
     class BinaryTree
     {
-    private:
+     private: 
         struct Node
         {
-
             T valy;
             Node *left;
             Node *right;
             Node *parent;
-            Node(T v, Node *nodeL = nullptr, Node *nodeR = nullptr, Node *nodeP = nullptr) : valy(v), left(nodeL), right(nodeR), parent(nodeP) {}
+            Node(T v, Node *nodeL = nullptr, Node *nodeR = nullptr, Node *nodeP = nullptr) : valy(v), left(nodeL), right(nodeR), parent(nodeP) {};
         };
 
         Node *root;
@@ -37,31 +36,62 @@ namespace ariel
                     this->root = new Node(valy)
             }
               else{
-                        root->valy = valy;
-              }      
+                        root->valy = valy;}      
             return *this;
         }
-        BinaryTree<T> &add_left(T parent, T left)
+        BinaryTree<T> &add_left(T parentC, T leftC)
         {
-            return *this;
+            if(this->root == nullptr)
+                    throw("not in the tree");
+
+            Node *found = found_node(this->root, parentC);
+            if(found->left != nullptr)
+                        found->left->valy = leftC
+
+            else{
+                found->left = new Node(leftC);
+                found->left->parent = found;
+            }
+            return *this
         }
-        BinaryTree<T> &add_right(T parent, T right)
+        BinaryTree<T> &add_right(T parentC, T rightC)
         {
-            Node *found = found_node(this->root, parent);
-            if (found == nullptr) // if we didnt found
+            Node *found = found_node(this->root, parentC);
+            if (found == nullptr) // not exist
             {
-                throw std::invalid_argument("No value found");
+                throw std::invalid_argument("not in the tree");
             }
             if (found->right == nullptr) //If he has no right son
             {
-                found->right = new Node(right);
+                found->right = new Node(rightC);
                 found->right->parent = found; // Updating his parent
             }
             else // If he has a son
             {
-                found->right->data = right;
+                found->right->data = rightC;
             }
             return *this;
+        }
+
+             /**
+         * Internal method to insert into a subtree.
+         * x is the item to insert.
+         * t is the node that roots the subtree.
+         * Set the new root of the subtree.
+         */
+        BinaryTree<T>* insert( const T &x, BinaryTree<T> * &t, BinaryTree <T> *par )
+        {
+                if( t == nullptr )
+                {
+                        t = new Node{ x, nullptr, nullptr, par };
+                        return t;
+                }
+                else if( x < t->valy )
+                        return insert( x, t->left, t );
+                else if( t->valy < x )
+                        return insert( x, t->right, t );
+                else
+                        return nullptr;  // if exist do nothing
         }
         
            friend std::ostream &operator<<(std::ostream &os, const BinaryTree &trees)
@@ -76,9 +106,15 @@ namespace ariel
             int kind;
             std::stack<Node *> stack;
 
+
+        private: 
+            friend class BinaryTree<T>;
+            Node *nodePtr;
+            BinaryTree<T> *tree; 
+            Iterator(const Node *p,const BinaryTree<T> *t); 
+        
         public:
-            // constrctor
-            Iterator() : curr(nullptr){};
+            Iterator() : curr(nullptr){}; // constrctor
             Iterator(const int kind, Node *node=nullptr) : curr(node) ,kind(typekind){
                 init_Stack(node);
                 if (!stack.empty())
@@ -88,7 +124,8 @@ namespace ariel
                     stack.pop();
                 }
             }
-
+            
+     
             Node *get_current()
             {
                 return curr;
@@ -229,7 +266,7 @@ namespace ariel
             this->root = bt.root;
             bt.root = nullptr;
         }
-        //-------------//
+      
 
         ~BinaryTree<T>()
         {
@@ -260,9 +297,49 @@ namespace ariel
             return *this;
         }
 
+          /**
+         * Returns true if x is found in the tree.
+         */
+        bool contains(const T & x ) const{
+                return contains( x, root );}
+
+        /**
+         * Internal method to test if an item is in a subtree.
+         * x is item to search for.
+         * t is the node that roots the subtree.
+         */
+                bool contains(const T &x, BinaryNode<T> *root ) const{
+                if( root == nullptr )
+                        return false;
+                else if( x < t->element )
+                        return contains( x, t->left );
+                else if( t->element < x )
+                        return contains( x, t->right );
+                else
+                        return true;    // Match
+        }
+
+
+        /**
+         search for item. if found, return an iterator pointing
+        at it in the tree; otherwise, return Node(nullptr,this)
+        */
+      
+        BinaryTree<T>::find(const T &node) const
+        {
+        auto t = root;
+        while (t != nullptr && !(t->valy == node))
+        {
+                if(node < t->element) 
+                 t = t->left 
+                else t = t->right;
+        }
+        return Node(t, this);
+}
+
         Node *found_node(Node *node, T value)
         {
-            if (node == nullptr) //Basic
+            if (node == nullptr) 
             {
                 return nullptr;
             }
@@ -296,6 +373,16 @@ namespace ariel
             return *this;
         }
 
+        /**
+         * Internal method to clone subtree.
+         */
+         BinaryTree<T> *clone( BinaryTree<T> *tree ) const
+                  {
+                if( t == nullptr )
+                        return nullptr;
+                else
+                        return new BinaryTree<T>{ tree->valy, clone( tree->left ), clone( tree->right ), tree->parent };
+                  }
 
         Iterator begin()
         {
